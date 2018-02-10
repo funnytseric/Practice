@@ -30,9 +30,12 @@ namespace WindowsFormsApplication1
             for (int i = 0; i < a.Length; i++)
                 str += a[i].ToString() + " ";
 
+            this.CountPrimeSetBits(10, 15);
+
             MessageBox.Show(str);
         }
 
+        //swap function for quick sort
         private void Swap(int[] ary, int a, int b)
         {
             int temp = ary[a];
@@ -40,23 +43,28 @@ namespace WindowsFormsApplication1
             ary[b] = temp;
         }
 
+        //quick sort implementation
         private void Sort(int[] ary, int left, int right)
         {
             if (left >= right)
                 return;
 
-            int pivot = left;
+            int pivot = left;//chose the 1st element as pivot
             int pivotVal = ary[pivot];
             int swapIndex = left;
 
-            Swap(ary, pivot, right);
+            Swap(ary, pivot, right);//swap pivot to right end
+
+            //main loop, if the next number is less than pivot value,
+            //swap it with the number on stored index, then increase the index by 1
             for(int i=left; i<right;i++)
             {
                 if (ary[i] <= pivotVal)
                     Swap(ary, i, swapIndex++);
             }
-            Swap(ary, swapIndex, right);
+            Swap(ary, swapIndex, right);//swap the pivot number back to the stored index
 
+            //sort the two sub-sequences
             Sort(ary, left, swapIndex - 1);
             Sort(ary, swapIndex + 1, right);
         }
@@ -90,8 +98,10 @@ namespace WindowsFormsApplication1
                 {
                     if (grid[h, w] == 1)
                     {
-                        perimeter += 4;
+                        perimeter += 4;//each islan cell contributes 4 boundaries
 
+                        //if the previous cell is also an island cell, there are two boundaries are repeated
+                        //so the sum of perimeter should be decreased by 2
                         if (h > 0 && grid[h - 1, w] == 1)
                             perimeter -= 2;
                         if (w > 0 && grid[h, w - 1] == 1)
@@ -100,6 +110,38 @@ namespace WindowsFormsApplication1
                 }
 
             return perimeter;
+        }
+
+        private int CountPrimeSetBits(int L, int R)
+        {
+            //the given numbers are guaranteed to be less than 10^6 (around 2^20)
+            //so the sum of bits will less than 24, we can just list out prime numbers that less than 24
+            int[] primes = new int[] { 2, 3, 5, 7, 11, 13, 17, 19, 23 };
+            int result = 0;
+
+            for (int i = L; i <= R; i++)
+            {
+                int j = i;
+                int bitSum = 0;
+
+                //convert integer bit by bit, and sum it up to get the bit count with "1"
+                while (j > 0)
+                {
+                    bitSum += j % 2;
+                    j >>= 1;
+                }
+
+                //check the prime number list to find whether the sum is a prime
+                for (int k = 0; k < 8; k++)
+                {
+                    if (bitSum == primes[k])
+                    {
+                        result++;
+                        break;
+                    }
+                }
+            }
+            return result;
         }
     }
 }
