@@ -16,9 +16,8 @@ namespace WindowsFormsApplication1
         public Form1()
         {
             InitializeComponent();
-
             int[] a = new int[10];
-            
+
             string str = "numbers before sorted: ";
             for (int i = 0; i < a.Length; i++)
             {
@@ -28,7 +27,7 @@ namespace WindowsFormsApplication1
             str += "\n";
             Dictionary<int, int> dic = new Dictionary<int, int>();
 
-            Sort(a, 0, a.Length-1);
+            Sort(a, 0, a.Length - 1);
             for (int i = 0; i < a.Length; i++)
                 str += a[i].ToString() + " ";
 
@@ -203,6 +202,24 @@ namespace WindowsFormsApplication1
                 return depth + 1;
             }
             else return 0;//if the current node is null, return 0
+        }
+
+
+
+        public char FindTheDifference(string s, string t)
+        {
+            char[] tt = t.ToCharArray();
+            char[] ss = s.ToCharArray();
+
+            Array.Sort(ss);
+            Array.Sort(tt);
+
+            for (int i = 0; i < ss.Length; i++)
+            {
+                if (tt[i] != ss[i])
+                    return tt[i];
+            }
+            return tt[t.Length - 1];
         }
     }
 
