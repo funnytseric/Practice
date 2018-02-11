@@ -183,6 +183,27 @@ namespace WindowsFormsApplication1
             }
             return max > result ? max : result;
         }
+
+        //find max depth of a given binary tree
+        public int MaxDepth(TreeNode root)
+        {
+            int l = 0, r = 0, depth = 0;
+
+            //recursively check the nodes, if the node is not null and has sub-tree(s),
+            //return 1 + the max depth of sub-tree(s)
+            if (root != null)
+            {
+                if (root.left != null)
+                    l = MaxDepth(root.left);
+
+                if (root.right != null)
+                    r = MaxDepth(root.right);
+
+                depth = l > r ? l : r;
+                return depth + 1;
+            }
+            else return 0;//if the current node is null, return 0
+        }
     }
 
     public class TreeNode
