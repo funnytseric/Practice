@@ -163,6 +163,26 @@ namespace WindowsFormsApplication1
                 return node;
             }
         }
+
+        public int FindMaxConsecutiveOnes(int[] nums)
+        {
+            if (nums.Length < 2)
+                return nums[0];
+
+            int result = 0, max = 0;
+            for (int i = 0; i < nums.Length; i++)
+            {
+                if (nums[i] == 1)
+                    max++;
+                else
+                {
+                    if (max > result)
+                        result = max;
+                    max = 0;
+                }
+            }
+            return max > result ? max : result;
+        }
     }
 
     public class TreeNode
