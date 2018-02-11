@@ -18,6 +18,7 @@ namespace WindowsFormsApplication1
             InitializeComponent();
 
             int[] a = new int[10];
+            
             string str = "numbers before sorted: ";
             for (int i = 0; i < a.Length; i++)
             {
@@ -25,6 +26,7 @@ namespace WindowsFormsApplication1
                 str += a[i].ToString() + " ";
             }
             str += "\n";
+            Dictionary<int, int> dic = new Dictionary<int, int>();
 
             Sort(a, 0, a.Length-1);
             for (int i = 0; i < a.Length; i++)
@@ -142,6 +144,35 @@ namespace WindowsFormsApplication1
                 }
             }
             return result;
+        }
+
+        public TreeNode InvertTree(TreeNode root)
+        {
+            if (root == null)
+                return null;
+            else
+            {
+                //copy the node value from current node
+                TreeNode node = new TreeNode(root.val);
+
+                //recursively invert the two sub-nodes then assign them to the curren node
+                node.left = root.right == null ? null : InvertTree(root.right);
+                node.right = root.left == null ? null : InvertTree(root.left);
+
+                //return the node with inversed sub-trees
+                return node;
+            }
+        }
+    }
+
+    public class TreeNode
+    {
+        public int val;
+        public TreeNode left;
+        public TreeNode right;
+        public TreeNode(int value)
+        {
+            this.val = value;
         }
     }
 }
