@@ -1,18 +1,19 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>HTML/Javascript Test</title>    
+    <title>HTML/Javascript Test</title>
     <script type="text/javascript">
         //****************************** Begin of Your Javascript *****************************************************************************************************
         // Please write you javascript here.
 		var listCountries = [];
 		var listCities = [];
-		
+
 		var numCheckedContinent = 1;
 		var numCompletedQuery = 0;
-		var listCheckedContinent = [{code: "AF", checked: true}, {code: "AS", checked: false}, {code: "EU", checked: false}, {code: "NA", checked: false}, 
+		var listCheckedContinent = [{code: "AF", checked: true}, {code: "AS", checked: false}, {code: "EU", checked: false}, {code: "NA", checked: false},
 									{code: "OC", checked: false}, {code: "SA", checked: false}, {code: "AN", checked: false}];
-		
+
+		//toggle state of clicked check box stored in "listCheckedContinent", and update total checked boxes count
 		function changeCheck(index)
 		{
 			if(listCheckedContinent[index].checked == false)
@@ -26,29 +27,62 @@
 				numCheckedContinent--;
 			}
 		}
-		
+
 		function queryCountries(index)
 		{
+			//get continent code from "listCheckedContinent" by index
 			var continentCode = listCheckedContinent[index].code;
-			
+
 			var xhttp;
 			xhttp = new XMLHttpRequest();
-			xhttp.onreadystatechange = function() 
+			xhttp.onreadystatechange = function()
 			{
-				if (this.readyState == 4 && this.status == 200) 
+				if (this.readyState == 4 && this.status == 200)
 				{
 					var row = JSON.parse(this.responseText);
-					
-					listCountries[index] = row;
+
+					//alert("insert");
+					insertCountryAndCity(row.geonames);
+
+                    //count +1 if a specific query with Continent code is complete
 					numCompletedQuery++;
-					//alert(numCompletedQuery + ", " + numCheckedContinent);
+
+                    //if all queries are completed, process displaying
 					if(numCompletedQuery == numCheckedContinent)
 					{
-						alert("complete all query");
-						var testDiv = document.getElementById("testDiv");
-						
+					    alert("complete all query");
+
+                        //sort country list
+					    listCountries.sort(function compare(a, b)
+					    {
+					        if (a.countryName < b.countryName)
+					            return -1;
+					        if (a.countryName > b.countryName)
+					            return 1;
+					        return 0;
+					    });
+                        //sort city list
+					    listCities.sort(function compare(a, b) {
+					        if (a.cityName < b.cityName)
+					            return -1;
+					        if (a.cityName > b.cityName)
+					            return 1;
+					        return 0;
+					    });
+
+                        //toggle "query detials" and "loading data"
+					    var queryDiv = document.getElementById("divQueryTable");
+					    var loadingDiv = document.getElementById("divLoading");
+
+					    queryDiv.style.display = "block";
+					    loadingDiv.style.display = "none";
+
+                        //update dropdown select of both country and city
+					    updateDropDownSelect(listCountries, listCities);
+						/*var testDiv = document.getElementById("testDiv");
+
 						var str = "";
-						
+
 						for(var i=0; i<7; i++)
 						{
 							if(listCheckedContinent[i].checked == true)
@@ -60,21 +94,32 @@
 								str += "<hr>";
 							}
 						}
-						
-						
-						testDiv.innerHTML = str;
+
+
+						testDiv.innerHTML = str;*/
+					    numCompletedQuery = 0;//reset completed query count
 					}
 				}
 			};
-			
-			xhttp.open("GET", "http://api.geonames.org/searchJSON?q=&continentCode=" + continentCode + "&maxRows=10&username=funnytseric", true);
+
+			//add the specific continent code to the querying url
+			xhttp.open("GET", "http://api.geonames.org/searchJSON?q=&continentCode=" + continentCode + "&maxRows=1000&username=funnytseric", true);
 			//alert("here");
 			xhttp.send();
 		}
-		
-		function getCity()
+
+		function getCityButtonClick()
 		{
-			alert("1");
+		    //init country list and city list
+		    listCountries = [];
+		    listCities = [];
+
+		    var queryDiv = document.getElementById("divQueryTable");
+		    var loadingDiv = document.getElementById("divLoading");
+
+		    queryDiv.style.display = "none";
+		    loadingDiv.style.display = "block";
+
 			for(var i=0; i<7; i++)
 			{
 				if(listCheckedContinent[i].checked == true)
@@ -85,82 +130,193 @@
 			}
 		}
 
+		function insertCountryAndCity(geonames)
+		{
+		    
+			//check if a country exist, if not, insert it to list
+		    for (var i = 0; i < geonames.length; i++)
+		    {
+		        var tempCountryID = geonames[i].countryId
+		        var tempCountryName = geonames[i].countryName;
+		        var tempCityName = geonames[i].name;
+		        var tempCtyLat = geonames[i].lat;
+		        var tempCityLng = geonames[i].lng;
 
+		        var countryObject;
+		        var cityObject;
 
+		        if (typeof tempCountryID == "undefined")
+		        {
+		            //alert("undefined country id");
+		            continue;
+		        }
+		        else
+		        {
+		            countryObject = { countryID: tempCountryID, countryName: tempCountryName };
+		            cityObject = { countryID: tempCountryID, cityName: tempCityName, Lat: tempCtyLat, Lng: tempCityLng };
+		        }
+
+		        var countryIndex = -1;
+		        for (var j = 0; j < listCountries.length; j++)
+		        {
+		            if (listCountries[j].countryID == tempCountryID)
+		            {
+		                countryIndex = j;
+		                break;
+		            }
+		        }
+		        
+		        if (countryIndex == -1)
+		        {
+		            listCountries.push(countryObject);
+		        }
+		        listCities.push(cityObject);
+			}
+		}
+
+		function updateDropDownSelect(countryList, cityList)
+		{
+		    var selectCountry = document.getElementById("selectCountry");
+		    var selectCity = document.getElementById("selectCity");
+
+		    //clear select options
+		    for (var i = selectCountry.options.length - 1; i > 0 ; i--)
+		        selectCountry.remove(i);
+		    for (var i = selectCity.options.length - 1; i > 0 ; i--)
+		        selectCity.remove(i);
+
+		    var opt;
+            //add country options to select
+		    for(var i=0; i< countryList.length; i++)
+		    {
+		        opt = document.createElement("option");
+		        opt.text = countryList[i].countryName;
+		        selectCountry.add(opt);
+		    }
+		    //add city options to select
+		    for (var i = 0; i < cityList.length; i++) {
+		        opt = document.createElement("option");
+		        opt.text = cityList[i].cityName;
+		        selectCity.add(opt);
+		    }
+		}
+
+		function filterCitySelect(cID)
+		{
+		    var selectCity = document.getElementById("selectCity");
+            //clear city options
+		    for(var i = selectCity.length-1; i>0; i--)
+		    {
+		        selectCity.remove(i);
+		    }
+		    //add filtered cities
+		    var opt;
+		    for(var i = 0; i < listCities.length; i++)
+		    {
+		        if(listCities[i].countryID == cID)
+		        {
+		            opt = document.createElement("option");
+		            opt.text = listCities[i].cityName;
+
+		            selectCity.add(opt);
+		        }
+		    }
+		}
+
+		function selectCountryChange()
+		{
+		    var selectCountry = document.getElementById("selectCountry");
+		    var selectIndex = selectCountry.selectedIndex;
+		    var cName = selectCountry.options[selectIndex].text;
+		    var cID = -1;
+
+		    for(var i=0; i<listCountries.length; i++)
+		    {
+		        if (listCountries[i].countryName == cName)
+		            cID = listCountries[i].countryID;
+		    }
+
+            if(cID != -1)
+                filterCitySelect(cID);
+		}
 
         //****************************** End of Your Javascript *****************************************************************************************************
-	</script>
+    </script>
 </head>
 <body>
-                <!-- ***************************************************************** start of your implementation of HTML ******************************************************** -->
-                <h2>
-                    Your implemetation</h2>
-                <table>
-                    <tr>
-                        <td>
-                            Continent
-                        </td>
-                        <td>
-                            <input type="checkbox" id="checkBoxAF" value="AF" onchange = "changeCheck(0)" checked="checked" />Africa
-                            <input type="checkbox" id="checkBoxAS" value="AS" onchange = "changeCheck(1)"/>Asia
-                            <input type="checkbox" id="checkBoxEU" value="EU" onchange = "changeCheck(2)"/>Europe
-                            <input type="checkbox" id="checkBoxNA" value="NA" onchange = "changeCheck(3)"/>North American
-                            <br />
-                            <input type="checkbox" id="checkBoxOC" value="OC" onchange = "changeCheck(4)"/>Oceania
-                            <input type="checkbox" id="checkBoxSA" value="SA" onchange = "changeCheck(5)"/>South American
-                            <input type="checkbox" id="checkBoxAN" value="AN" onchange = "changeCheck(6)"/>Anetatika
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Country
-                        </td>
-                        <td>
-                            <select>
-                                <option>-- Please Select --</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            City
-                        </td>
-                        <td>
-                            <select>
-                                <option>-- Please Select --</option>
-                            </select>
-                        </td>
-                    </tr>
-					<tr>
-						<td>
-						<!-- as i dont want my page send a request everytime the user check/uncheck a continent options, i use a button to query cities-->
-							<button type="button" onclick="getCity()">Get Cities</button>
-						</td>
-					</tr>
-                    <tr>
-                        <td colspan="2" height="20px">
-                            &nbsp;
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <b>Special Notes</b><br />
-                            <i>Please leave your comment or any explanation here for any thing that you want to
-                                return back to us.</i>
-                            <ol>
-                                <li>comment #1</li>
-                                <li>comment #2</li>
-                                <li>comment #3</li>
-                                <li>comment #4</li>
-                                <li>etc...</li>
-                            </ol>
-                        </td>
-                    </tr>
-                </table>
-				
-				<div id = "testDiv">
-					123
-				</div>
-                <!-- ***************************************************************** end of your implementation of HTML ******************************************************** -->
+    <!-- ***************************************************************** start of your implementation of HTML ******************************************************** -->
+    <h2>
+        Your implemetation
+    </h2>
+    <div id="divLoading" style="display: none">
+        <h2>Loading data...</h2>
+    </div>
+    <div id="divQueryTable">
+        <table>
+            <tr>
+                <td>
+                    Continent
+                </td>
+                <td>
+                    <input type="checkbox" id="checkBoxAF" value="AF" onchange="changeCheck(0)" checked="checked" />Africa
+                    <input type="checkbox" id="checkBoxAS" value="AS" onchange="changeCheck(1)" />Asia
+                    <input type="checkbox" id="checkBoxEU" value="EU" onchange="changeCheck(2)" />Europe
+                    <input type="checkbox" id="checkBoxNA" value="NA" onchange="changeCheck(3)" />North American
+                    <br />
+                    <input type="checkbox" id="checkBoxOC" value="OC" onchange="changeCheck(4)" />Oceania
+                    <input type="checkbox" id="checkBoxSA" value="SA" onchange="changeCheck(5)" />South American
+                    <input type="checkbox" id="checkBoxAN" value="AN" onchange="changeCheck(6)" />Anetatika
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Country
+                </td>
+                <td>
+                    <select id="selectCountry" onchange="selectCountryChange()">
+                        <option>-- All --</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    City
+                </td>
+                <td>
+                    <select id="selectCity">
+                        <option>-- Please Select --</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <!-- as i dont want my page send a request everytime the user check/uncheck a continent options, i use a button to query cities-->
+                    <button type="button" onclick="getCityButtonClick()">Get Cities</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" height="20px">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <b>Special Notes</b><br />
+                    <i>
+                        Please leave your comment or any explanation here for any thing that you want to
+                        return back to us.
+                    </i>
+                    <ol>
+                        <li>comment #1</li>
+                        <li>comment #2</li>
+                        <li>comment #3</li>
+                        <li>comment #4</li>
+                        <li>etc...</li>
+                    </ol>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- ***************************************************************** end of your implementation of HTML ******************************************************** -->
 </body>
 </html>
